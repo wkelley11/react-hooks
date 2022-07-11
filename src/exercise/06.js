@@ -10,35 +10,54 @@ import {PokemonForm, fetchPokemon, PokemonInfoFallback, PokemonDataView} from '.
 
 function PokemonInfo({pokemonName}) {
   // 🐨 Have state for the pokemon (null)
-  const [pokemon, setPokemon] = React.useState(null);
-  const [error, setError] = React.useState(null);
+  const [state, setState] = React.useState({
+    status: "idle",
+    pokemon: null,
+    error: null,
+  });
+  // const [pokemon, setPokemon] = React.useState(null);
+  // const [error, setError] = React.useState(null);
+  const [status, setStatus] = React.useState("idle");
 
   // 🐨 use React.useEffect where the callback should be called whenever the
   // pokemon name changes.
   React.useEffect(() => {
-    setPokemon(null);
-    setError(null);
+    setState({
+      status: "pending",
+      pokemon: null, 
+      error: null
+    })
+    // setPokemon(null);
+    // setError(null);
     fetchPokemon(pokemonName).then(
     /* update all the state here */
-      pokemon => setPokemon(pokemon),
-      error => setError(error));
+      pokemon => setState({
+        status: "resolved",
+        pokemon: pokemon,
+        error: state.error,
+      }),
+      error => setState(...state, {
+        status: "rejected",
+        pokemon: state.pokemon,
+        error: error,
+      }))
     }, [pokemonName]);
 
   // 🐨 return the following things based on the `pokemon` state and `pokemonName` prop:
   //   1. no pokemonName: 'Submit a pokemon'
   //   2. pokemonName but no pokemon: <PokemonInfoFallback name={pokemonName} />
   //   3. pokemon: <PokemonDataView pokemon={pokemon} />
-  if (error) {
+  if (state.error) {
     return (
       <div role="alert">
-        There was an error: <pre style={{whiteSpace: 'normal'}}>{error.message}</pre>
+        There was an error: <pre style={{whiteSpace: 'normal'}}>{state.error.message}</pre>
       </div>
     )
   } else if (!pokemonName) {
     return "Submit a pokemon";
-  } else if (!pokemon) {
+  } else if (!state.pokemon) {
     return <PokemonInfoFallback name={pokemonName} />
-  } else return <PokemonDataView pokemon={pokemon} />
+  } else return <PokemonDataView pokemon={state.pokemon} />
 }
 
 function App() {
